@@ -17,7 +17,9 @@ class MagicHomeLight(MagicHomeDevice):
         if self.data.get('properties') != None:
             for properties in self.data.get('properties') :
                 if properties.get('name') == "brightness" :
-                    return properties.get('value')
+                    return int(int(properties.get('value')) * 255 / 100)
+        elif self.data.get('brightness') != None :
+            return self.data.get('brightness')
         return 100
 
 
@@ -63,7 +65,7 @@ class MagicHomeLight(MagicHomeDevice):
             for properties in self.data.get('properties') :
                 if properties.get('name') == "colorTemperature" :
                     return properties.get('value')
-        return 4500
+        return None
 
 
 
@@ -100,10 +102,7 @@ class MagicHomeLight(MagicHomeDevice):
         hsv_color = {}
         hsv_color['hue'] = color[0]
         hsv_color['saturation'] = color[1]/100
-        if (len(color) < 3):
-            hsv_color['brightness'] = int(self.brightness()) / 255.0
-        else:
-            hsv_color['brightness'] = color[2]
+        hsv_color['brightness'] = int(int(self.brightness()) * 100 / 255)
         if hsv_color['saturation'] == 0:
             hsv_color['hue'] = 0
         h = hsv_color['hue']
@@ -156,14 +155,19 @@ class MagicHomeLight(MagicHomeDevice):
                 r = t
                 g = p
                 b = v
-            else:
+            elif sectorNumber == 5 :
                 r = v
                 g = p
                 b = q
+            elif sectorNumber == 6 :
+                r = v
+                g = p
+                b = p
+            
         red = (int) (r * 255)   
         green = (int) (g * 255)
         blue = (int) (b * 255)
-        return self.makeColor(red, green, blue)
+        return self.makeColor(math.floor((red/100)+0.5), math.floor((green/100)+0.5), math.floor((blue/100)+0.5))
         
         
         
@@ -175,8 +179,8 @@ class MagicHomeLight(MagicHomeDevice):
     
     
     def color_to_hsv(self,color_number) :
-        b = 0xFF & int (color_number)
-        g = 0xFF00 & int (color_number)
+        b = 0x0000FF & int (color_number)
+        g = 0x00FF00 & int (color_number)
         g >>= 8
         r = 0xFF0000 & int(color_number)
         r >>= 16
@@ -184,7 +188,7 @@ class MagicHomeLight(MagicHomeDevice):
         max_res = max(rgb_arr)
         min_res = min(rgb_arr)
         if max_res == min_res :
-            h = 0
+            h = 360.0
         elif max_res == r :
             h = (60 * ( g - b ) / ( max_res - min_res ) + 360) % 360
         elif max_res == g :
@@ -192,10 +196,11 @@ class MagicHomeLight(MagicHomeDevice):
         elif max_res == b :
             h = (60 * ( r - g ) / ( max_res - min_res )) + 240
         if max_res == 0 :
-            s = 0
+            s = 0.0
         else:
-            s = ((max_res - min_res) / max_res)
+            s = ((max_res - min_res) / max_res) 
         v = max_res / 255.0
-        return h, s
-        
-        
+        if h == 0 :
+            h = 360.0
+        sua = s * 100
+        return  h, sua

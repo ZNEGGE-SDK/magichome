@@ -10,7 +10,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-MAGHCHOMECLOUDURL = "https://testpython{}.magichue.net"
+MAGHCHOMECLOUDURL = "https://wifij01{}.magichue.net"
 DEFAULTREGION = 'us'
 
 REFRESHTIME = 60 * 60 * 12
