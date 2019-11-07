@@ -1,24 +1,22 @@
 import time
 from magichome.devices.base import MagicHomeDevice
 
-class MagicHomeSocket(MagicHomeDevice):
 
+class MagicHomeSocket(MagicHomeDevice):
     def state(self):
-        if self.data.get('properties') != None:
-            for properties in self.data.get('properties') :
-                if properties.get('name') == "powerstate" :
-                    isTrue = properties.get('value') == "true"
+        if self.data.get("properties") != None:
+            for properties in self.data.get("properties"):
+                if properties.get("name") == "powerstate":
+                    isTrue = properties.get("value") == "true"
                     return isTrue
         return False
 
-        
-        
     def turn_on(self):
-        self.api.device_control(self.obj_id,'TurnOn','')
-        
+        self.api.device_control(self.obj_id, "TurnOn", "")
+
     def turn_off(self):
-        self.api.device_control(self.obj_id, 'TurnOff','')
-    
+        self.api.device_control(self.obj_id, "TurnOff", "")
+
     def update(self):
         """Avoid get cache value after control."""
         time.sleep(3)
@@ -29,11 +27,11 @@ class MagicHomeSocket(MagicHomeDevice):
         #     if device['id'] == self.obj_id:
         #         self.data = device['data']
         #         return True
-        
+
         success, response = self.api.device_control(
-            self.obj_id, 'Query', namespace='Query')
+            self.obj_id, "Query", namespace="Query"
+        )
         if success:
             self.data = response
             return True
         return
-    
