@@ -50,6 +50,8 @@ class MagicHomeApi:
 
     def get_access_token(self):
         headers = {"Content-Type": "application/json;charset=UTF-8;"}
+        s = requests.session()
+        s.keep_alive = False
         response = requests.post(
             (MAGHCHOMECLOUDURL + "/authorizationCode/ZG001").format(SESSION.region),
             headers=headers,
@@ -77,6 +79,8 @@ class MagicHomeApi:
 
         code = response_json.get("code")
 
+        s = requests.session()
+        s.keep_alive = False
         responsetk = requests.post(
             (MAGHCHOMECLOUDURL + "/authorizationToken").format(SESSION.region),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
@@ -120,6 +124,8 @@ class MagicHomeApi:
 
     def refresh_access_token(self):
         data = "grant_type=refresh_token&refresh_token=" + SESSION.refreshToken
+        s = requests.session()
+        s.keep_alive = False
         response = requests.get(
             (MAGHCHOMECLOUDURL + "/authorizationToken").format(SESSION.region)
             + "?"
@@ -219,7 +225,8 @@ class MagicHomeApi:
             },
             "payload": payload,
         }
-
+        s = requests.session()
+        s.keep_alive = False
         response = requests.post(
             (MAGHCHOMECLOUDURL + "/pythonAPI/ZG001").format(SESSION.region),
             json=data,
