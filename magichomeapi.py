@@ -127,9 +127,8 @@ class MagicHomeApi:
         s = requests.session()
         s.keep_alive = False
         response = requests.get(
-            (MAGHCHOMECLOUDURL + "/authorizationToken").format(SESSION.region)
-            + "?"
-            + data
+            (MAGHCHOMECLOUDURL + "/authorizationToken").format(SESSION.region) + "?" + data,
+			verify=False,
         )
         response_json = response.json()
         if response_json.get("responseStatus") == "error":
