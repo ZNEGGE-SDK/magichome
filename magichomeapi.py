@@ -69,7 +69,7 @@ class MagicHomeApi:
             verify=False,
         )
         response_json = response.json()
-
+        
         if response_json.get("responseStatus") == "error":
             message = response_json.get("msg")
             if message == "error":
@@ -79,6 +79,10 @@ class MagicHomeApi:
 
         code = response_json.get("code")
 
+        if code == 10033 :
+            _LOGGER.error("MagicHome account or password don't match")
+            return
+            
         s = requests.session()
         s.keep_alive = False
         responsetk = requests.post(
@@ -104,7 +108,7 @@ class MagicHomeApi:
         SESSION.accessToken = response_tk_json.get("access_token")
         SESSION.refreshToken = response_tk_json.get("refresh_token")
         SESSION.expireTime = int(time.time()) + response_tk_json.get("expires_in")
-
+        
         areaCode = SESSION.accessToken[0:2]
         if areaCode == "EU":
             SESSION.region = "eu"
@@ -128,7 +132,7 @@ class MagicHomeApi:
         s.keep_alive = False
         response = requests.get(
             (MAGHCHOMECLOUDURL + "/authorizationToken").format(SESSION.region) + "?" + data,
-			verify=False,
+            verify=False,
         )
         response_json = response.json()
         if response_json.get("responseStatus") == "error":
@@ -194,7 +198,10 @@ class MagicHomeApi:
         return success, response
 
     def _request(self, name, namespace, devId, value):
-
+        
+        if SESSION.accessToken is None:
+            return
+        
         headers = {"Content-Type": "application/json;charset=UTF-8;"}
         header = {
             "name": name,
