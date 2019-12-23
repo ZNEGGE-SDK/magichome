@@ -9,6 +9,9 @@ from magichome.devices.factory import get_magichome_device
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+requests.adapters.DEFAULT_RETRIES = 5
+s = requests.session()
+s.keep_alive = False
 
 MAGHCHOMECLOUDURL = "https://wifij01{}.magichue.net"
 DEFAULTREGION = "us"
