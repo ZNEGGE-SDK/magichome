@@ -1,4 +1,5 @@
 import time
+
 from magichome.devices.base import MagicHomeDevice
 
 

@@ -1,8 +1,8 @@
+from magichome.devices.controller import MagicHomeController
 from magichome.devices.light import MagicHomeLight
 from magichome.devices.scene import MagicHomeScene
-from magichome.devices.switch import MagicHomeSwitch
 from magichome.devices.socket import MagicHomeSocket
-from magichome.devices.controller import MagicHomeController
+from magichome.devices.switch import MagicHomeSwitch
 
 
 def get_magichome_device(data, api):
@@ -16,9 +16,9 @@ def get_magichome_device(data, api):
         devices.append(MagicHomeScene(data, api))
     elif dev_type == "switch":
         devices.append(MagicHomeSwitch(data, api))
-    elif dev_type == "socket":
-        devices.append(MagicHomeSocket(data, api))
-    elif dev_type == "controller":
-        devices.append(MagicHomeController(data, api))
+    # elif dev_type == "socket":
+    #     devices.append(MagicHomeSocket(data, api))
+    # elif dev_type == "controller":
+    #     devices.append(MagicHomeController(data, api))
 
     return devices

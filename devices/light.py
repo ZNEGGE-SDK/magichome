@@ -1,5 +1,6 @@
-from magichome.devices.base import MagicHomeDevice
 import math
+
+from magichome.devices.base import MagicHomeDevice
 
 
 class MagicHomeLight(MagicHomeDevice):
