@@ -7,7 +7,8 @@ import uuid
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-from magichome.devices.factory import get_magichome_device
+from magichome.devices.factory import get_magichome_device 
+from magichome.devices.factory import get_magichome_detail
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 requests.adapters.DEFAULT_RETRIES = 5
@@ -33,17 +34,32 @@ class MagicHomeSession:
     expireTime = 0
     devices = []
     region = DEFAULTREGION
+    lights = []
+    switch = []
+    
 
 
 SESSION = MagicHomeSession()
 
 
 class MagicHomeApi:
-    def init(self, username, password, company, platform):
+    
+    def magichom_hub(self, username, password):
         SESSION.username = username
         SESSION.password = self.md5str(password)
-        SESSION.company = company
-        SESSION.platform = platform
+        
+        if username is None or password is None:
+            raise MagicHomeApiException("Account or password is None")
+        else:
+            self.get_access_token()
+            self.discover_devices()
+            return SESSION
+        
+        
+    
+    def init(self, username, password):
+        SESSION.username = username
+        SESSION.password = self.md5str(password)
 
         if username is None or password is None:
             raise MagicHomeApiException("Account or password is None")
@@ -167,6 +183,20 @@ class MagicHomeApi:
 
         for device in devices:
             SESSION.devices.extend(get_magichome_device(device, self))
+            deviceType = device.get("deviceType")
+            if deviceType == "light":
+                SESSION.lights.extend(get_magichome_detail(device, self))
+            # elif deviceType == "scene":
+            #     devices.append(MagicHomeScene(data, api))
+            elif deviceType == "switch":
+                SESSION.switch.extend(get_magichome_detail(device, self))
+            #
+    #         if deviceType == "light":
+    #             SESSION.lights.extend(device)
+    #         if deviceType == "switch":
+    #             SESSION.switch.extend(device)
+        print(SESSION.lights)
+        print(SESSION.switch)
         return devices
 
     def get_devices_by_type(self, dev_type):
@@ -174,8 +204,23 @@ class MagicHomeApi:
         for device in SESSION.devices:
             if device.dev_type() == dev_type:
                 device_list.append(device)
+        return device_list
 
+#     def lights(self):
+#         light_list = []
+#         for deviec in SESSION.devices:
+#             if device.dev_type() == "light":
+#                 SESSION.lights.append(device)
+#         
+#     def switch(self):
+#         switch_list = []
+#         for deviec in SESSION.devices:
+#             if device.dev_type() == "switch":
+#                 SESSION.switch.append(device)
+# 
     def get_all_devices(self):
+        # lights()
+        # switch()
         return SESSION.devices
 
     def md5str(self, str):
@@ -196,7 +241,7 @@ class MagicHomeApi:
         if param is None:
             param = ""
         response = self._request(name, namespace, devId, param)
-
+        
         if response and response["payload"]["errorCode"] == None:
             success = True
         else:
@@ -240,7 +285,7 @@ class MagicHomeApi:
         )
 
         response_json = response.json()
-
+        print(response.json())
         if name == "DiscoveryDevices":
             if "payload" in response_json:
                 if "devices" in response_json["payload"]:
