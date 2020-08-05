@@ -10,6 +10,8 @@ class MagicHomeDevice(object):
         self.obj_name = data.get("deviceName")
         self.dev_type = data.get("deviceType")
         self.icon = data.get("icon")
+        self.unique_id = data.get("deviceId")
+        self.actions = data.get("actions")
 
     def name(self):
         return self.obj_name
@@ -36,6 +38,12 @@ class MagicHomeDevice(object):
                 if properties.get("name") == "status":
                     return False
         return True
+
+    def unique_id(self):
+        return self.unique_id
+        
+    def actions(self):
+        return self.actions
 
     def iconurl(self):
         return self.icon

@@ -44,7 +44,7 @@ SESSION = MagicHomeSession()
 
 class MagicHomeApi:
     
-    def magichom_hub(self, username, password):
+    def magichome_hub(self, username, password):
         SESSION.username = username
         SESSION.password = self.md5str(password)
         
@@ -186,17 +186,8 @@ class MagicHomeApi:
             deviceType = device.get("deviceType")
             if deviceType == "light":
                 SESSION.lights.extend(get_magichome_detail(device, self))
-            # elif deviceType == "scene":
-            #     devices.append(MagicHomeScene(data, api))
             elif deviceType == "switch":
                 SESSION.switch.extend(get_magichome_detail(device, self))
-            #
-    #         if deviceType == "light":
-    #             SESSION.lights.extend(device)
-    #         if deviceType == "switch":
-    #             SESSION.switch.extend(device)
-        print(SESSION.lights)
-        print(SESSION.switch)
         return devices
 
     def get_devices_by_type(self, dev_type):
@@ -206,18 +197,6 @@ class MagicHomeApi:
                 device_list.append(device)
         return device_list
 
-#     def lights(self):
-#         light_list = []
-#         for deviec in SESSION.devices:
-#             if device.dev_type() == "light":
-#                 SESSION.lights.append(device)
-#         
-#     def switch(self):
-#         switch_list = []
-#         for deviec in SESSION.devices:
-#             if device.dev_type() == "switch":
-#                 SESSION.switch.append(device)
-# 
     def get_all_devices(self):
         # lights()
         # switch()
@@ -285,7 +264,6 @@ class MagicHomeApi:
         )
 
         response_json = response.json()
-        print(response.json())
         if name == "DiscoveryDevices":
             if "payload" in response_json:
                 if "devices" in response_json["payload"]:
