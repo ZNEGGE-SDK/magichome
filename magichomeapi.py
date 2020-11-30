@@ -1,14 +1,19 @@
+import hashlib
 import json
 import logging
-import requests
 import time
-import hashlib
 import uuid
 
-from magichome.devices.factory import get_magichome_device
+import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+from magichome.devices.factory import get_magichome_device 
+from magichome.devices.factory import get_magichome_detail
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+requests.adapters.DEFAULT_RETRIES = 5
+s = requests.session()
+s.keep_alive = False
 
 MAGHCHOMECLOUDURL = "https://wifij01{}.magichue.net"
 DEFAULTREGION = "us"
@@ -29,20 +34,35 @@ class MagicHomeSession:
     expireTime = 0
     devices = []
     region = DEFAULTREGION
+    lights = []
+    switch = []
+    
 
 
 SESSION = MagicHomeSession()
 
 
 class MagicHomeApi:
-    def init(self, username, password, company, platform):
+    
+    def magichome_hub(self, username, password):
         SESSION.username = username
         SESSION.password = self.md5str(password)
-        SESSION.company = company
-        SESSION.platform = platform
+        
+        if username is None or password is None:
+            raise MagicHomeApiException("Account or password is None")
+        else:
+            self.get_access_token()
+            self.discover_devices()
+            return SESSION
+        
+        
+    
+    def init(self, username, password):
+        SESSION.username = username
+        SESSION.password = self.md5str(password)
 
         if username is None or password is None:
-            return None
+            raise MagicHomeApiException("Account or password is None")
         else:
             self.get_access_token()
             self.discover_devices()
@@ -69,7 +89,7 @@ class MagicHomeApi:
             verify=False,
         )
         response_json = response.json()
-        
+
         if response_json.get("responseStatus") == "error":
             message = response_json.get("msg")
             if message == "error":
@@ -79,10 +99,10 @@ class MagicHomeApi:
 
         code = response_json.get("code")
 
-        if code == 10033 :
+        if code == 10033:
             _LOGGER.error("MagicHome account or password don't match")
-            return
-            
+            raise MagicHomeApiException("MagicHome account or password don't match")
+
         s = requests.session()
         s.keep_alive = False
         responsetk = requests.post(
@@ -108,7 +128,7 @@ class MagicHomeApi:
         SESSION.accessToken = response_tk_json.get("access_token")
         SESSION.refreshToken = response_tk_json.get("refresh_token")
         SESSION.expireTime = int(time.time()) + response_tk_json.get("expires_in")
-        
+
         areaCode = SESSION.accessToken[0:2]
         if areaCode == "EU":
             SESSION.region = "eu"
@@ -131,7 +151,9 @@ class MagicHomeApi:
         s = requests.session()
         s.keep_alive = False
         response = requests.get(
-            (MAGHCHOMECLOUDURL + "/authorizationToken").format(SESSION.region) + "?" + data,
+            (MAGHCHOMECLOUDURL + "/authorizationToken").format(SESSION.region)
+            + "?"
+            + data,
             verify=False,
         )
         response_json = response.json()
@@ -161,6 +183,11 @@ class MagicHomeApi:
 
         for device in devices:
             SESSION.devices.extend(get_magichome_device(device, self))
+            deviceType = device.get("deviceType")
+            if deviceType == "light":
+                SESSION.lights.extend(get_magichome_detail(device, self))
+            elif deviceType == "switch":
+                SESSION.switch.extend(get_magichome_detail(device, self))
         return devices
 
     def get_devices_by_type(self, dev_type):
@@ -168,8 +195,11 @@ class MagicHomeApi:
         for device in SESSION.devices:
             if device.dev_type() == dev_type:
                 device_list.append(device)
+        return device_list
 
     def get_all_devices(self):
+        # lights()
+        # switch()
         return SESSION.devices
 
     def md5str(self, str):
@@ -190,7 +220,7 @@ class MagicHomeApi:
         if param is None:
             param = ""
         response = self._request(name, namespace, devId, param)
-
+        
         if response and response["payload"]["errorCode"] == None:
             success = True
         else:
@@ -198,16 +228,12 @@ class MagicHomeApi:
         return success, response
 
     def _request(self, name, namespace, devId, value):
-        
+
         if SESSION.accessToken is None:
-            return
-        
+            raise MagicHomeApiException("User information is invalid, please try to restart. Please note that the account and password are correct")
+
         headers = {"Content-Type": "application/json;charset=UTF-8;"}
-        header = {
-            "name": name,
-            "namespace": namespace,
-            "payloadVersion": 1,
-        }
+        header = {"name": name, "namespace": namespace, "payloadVersion": 1}
 
         payload = {}
         if value != {}:
@@ -217,10 +243,7 @@ class MagicHomeApi:
                 "value": value,
             }
         else:
-            payload = {
-                "accessToken": SESSION.accessToken,
-                "deviceId": devId,
-            }
+            payload = {"accessToken": SESSION.accessToken, "deviceId": devId}
 
         data = {
             "header": {
@@ -241,7 +264,6 @@ class MagicHomeApi:
         )
 
         response_json = response.json()
-
         if name == "DiscoveryDevices":
             if "payload" in response_json:
                 if "devices" in response_json["payload"]:
